@@ -358,18 +358,25 @@
       '</div>';
   }
 
-  function renderSdBox(details, wellNames, site, cable) {
+ function renderSdBox(details, wellNames, site, cable) {
     var traces = wellNames.map(function (w) {
       return {
         y: details.filter(function (d) { return d.well === w; }).map(function (d) { return d.sd; }),
-        name: w,
+        name: "Well " + w,
         type: "box",
-        boxpoints: "outliers"
+        boxpoints: "outliers",
+        x0: "Well " + w
       };
     });
 
     var layout = {
       title: "SD by Well (" + site + ", " + cable + " ft)",
+      xaxis: {
+        title: "Well",
+        type: "category",
+        categoryorder: "array",
+        categoryarray: wellNames.map(function (w) { return "Well " + w; })
+      },
       yaxis: { title: "Standard Deviation (counts)" },
       showlegend: false,
       margin: { t: 50, b: 80, l: 60, r: 20 },
