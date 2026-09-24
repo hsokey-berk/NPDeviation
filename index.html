@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neutron Probe Repeatability Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="frame">
+
+  <aside class="rail">
+    <header class="rail__header">
+      <h1>Repeatability Analysis</h1>
+      <p class="sync" id="syncStatus">Loading data&hellip;</p>
+    </header>
+
+    <div class="field">
+      <label for="siteSelect">Site</label>
+      <select id="siteSelect"></select>
+    </div>
+
+    <div class="field">
+      <label for="cableLenInput">Cable length (ft)</label>
+      <input type="number" id="cableLenInput" value="10" min="0" step="1">
+    </div>
+
+    <hr class="rule">
+
+    <div class="field">
+      <label>Date range</label>
+      <div class="filterRow">
+        <select id="startMonth"></select>
+        <select id="startYear"></select>
+      </div>
+      <label class="rangeLabel">to</label>
+      <div class="filterRow">
+        <select id="endMonth"></select>
+        <select id="endYear"></select>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <div class="field">
+      <label>Wells to include</label>
+      <div class="actionRow">
+        <button id="selectAllWellsBtn" class="smallBtn">Select all</button>
+        <button id="clearWellsBtn" class="smallBtn">Clear</button>
+      </div>
+      <div class="yearChecks" id="wellChecks"></div>
+    </div>
+
+    <button id="analyzeBtn" class="plotBtn">Analyze</button>
+
+    <p class="note" id="statusNote"></p>
+  </aside>
+
+  <main class="stage">
+
+    <div class="tabBar">
+      <button class="tab active" data-tab="summary">Summary</button>
+      <button class="tab" data-tab="cvBar">CV by Well</button>
+      <button class="tab" data-tab="sdBox">SD by Well</button>
+      <button class="tab" data-tab="sdTime">SD Over Time</button>
+      <button class="tab" data-tab="cvTime">CV Over Time</button>
+      <button class="tab" data-tab="wellTable">Well Table</button>
+      <button class="tab" data-tab="detail">Detail Table</button>
+    </div>
+
+    <div class="tabContent active" id="tab-summary">
+      <div class="summaryCards" id="summaryCards">
+        <p class="empty">Run analysis to see results.</p>
+      </div>
+    </div>
+
+    <div class="tabContent" id="tab-cvBar">
+      <div id="plotCvBar" class="plot"></div>
+    </div>
+
+    <div class="tabContent" id="tab-sdBox">
+      <div id="plotSdBox" class="plot"></div>
+    </div>
+
+    <div class="tabContent" id="tab-sdTime">
+      <div id="plotSdTime" class="plot"></div>
+    </div>
+
+    <div class="tabContent" id="tab-cvTime">
+      <div id="plotCvTime" class="plot"></div>
+    </div>
+
+    <div class="tabContent" id="tab-wellTable">
+      <div class="tableWrap">
+        <table id="wellTable"></table>
+      </div>
+    </div>
+
+    <div class="tabContent" id="tab-detail">
+      <div class="tableWrap">
+        <table id="detailTable"></table>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="config.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
