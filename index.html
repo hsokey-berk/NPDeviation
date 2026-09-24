@@ -1,118 +1,394 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Neutron Probe Repeatability Analysis</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+:root {
+  --bg: #EEEFEA;
+  --panel: #FFFFFF;
+  --ink: #1E2624;
+  --ink-soft: #5B655F;
+  --line: #D3D6CC;
+  --accent: #2F6F62;
+  --accent-ink: #FFFFFF;
+}
 
-<div class="frame">
+* { box-sizing: border-box; }
 
-  <aside class="rail">
-    <header class="rail__header">
-      <h1>Repeatability Analysis</h1>
-      <p class="sync" id="syncStatus">Loading data&hellip;</p>
-    </header>
+html, body {
+  height: 100%;
+  margin: 0;
+}
 
-    <div class="field">
-      <label for="siteSelect">Site</label>
-      <select id="siteSelect"></select>
-    </div>
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
 
-    <div class="field">
-      <label for="cableLenInput">Cable length (ft)</label>
-      <input type="number" id="cableLenInput" value="10" min="0" step="1">
-    </div>
+.frame {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  grid-template-rows: 100%;
+  height: 100vh;
+}
 
-    <hr class="rule">
+/* ---- Sidebar ---- */
 
-    <div class="field">
-      <label>Date range</label>
-      <div class="filterRow">
-        <select id="startMonth"></select>
-        <select id="startYear"></select>
-      </div>
-      <label class="rangeLabel">to</label>
-      <div class="filterRow">
-        <select id="endMonth"></select>
-        <select id="endYear"></select>
-      </div>
-    </div>
+.rail {
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  padding: 28px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  height: 100%;
+}
 
-    <hr class="rule">
+.rail__header {
+  margin-bottom: 8px;
+}
 
-    <div class="field">
-      <label>Wells to include</label>
-      <div class="actionRow">
-        <button id="selectAllWellsBtn" class="smallBtn">Select all</button>
-        <button id="clearWellsBtn" class="smallBtn">Clear</button>
-      </div>
-      <div class="yearChecks" id="wellChecks"></div>
-    </div>
+.rail__header h1 {
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
 
-    <button id="analyzeBtn" class="plotBtn">Analyze</button>
+.sync {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 0;
+}
 
-    <p class="note" id="statusNote"></p>
-  </aside>
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
 
-  <main class="stage">
+.field[hidden] { display: none; }
 
-    <div class="tabBar">
-      <button class="tab active" data-tab="summary">Summary</button>
-      <button class="tab" data-tab="cvBar">CV by Well</button>
-      <button class="tab" data-tab="sdBox">SD by Well</button>
-      <button class="tab" data-tab="sdTime">SD Over Time</button>
-      <button class="tab" data-tab="cvTime">CV Over Time</button>
-      <button class="tab" data-tab="wellTable">Well Table</button>
-      <button class="tab" data-tab="detail">Detail Table</button>
-    </div>
+.field label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-transform: none;
+}
 
-    <div class="tabContent active" id="tab-summary">
-      <div class="summaryCards" id="summaryCards">
-        <p class="empty">Run analysis to see results.</p>
-      </div>
-    </div>
+.rangeLabel {
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin: 2px 0;
+}
 
-    <div class="tabContent" id="tab-cvBar">
-      <div id="plotCvBar" class="plot"></div>
-    </div>
+select, input[type="number"] {
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 7px 8px;
+}
 
-    <div class="tabContent" id="tab-sdBox">
-      <div id="plotSdBox" class="plot"></div>
-    </div>
+select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+  background-position: calc(100% - 16px) center, calc(100% - 11px) center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
 
-    <div class="tabContent" id="tab-sdTime">
-      <div id="plotSdTime" class="plot"></div>
-    </div>
+select:focus, input:focus, .plotBtn:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 
-    <div class="tabContent" id="tab-cvTime">
-      <div id="plotCvTime" class="plot"></div>
-    </div>
+.rule {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 4px 0;
+}
 
-    <div class="tabContent" id="tab-wellTable">
-      <div class="tableWrap">
-        <table id="wellTable"></table>
-      </div>
-    </div>
+.filterRow {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0;
+}
 
-    <div class="tabContent" id="tab-detail">
-      <div class="tableWrap">
-        <table id="detailTable"></table>
-      </div>
-    </div>
+.filterRow select {
+  flex: 1;
+  font-size: 12.5px;
+  padding: 6px 6px;
+  background-position: calc(100% - 12px) center, calc(100% - 8px) center;
+}
 
-  </main>
+.actionRow {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 8px;
+}
 
-</div>
+.smallBtn {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
 
-<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="config.js"></script>
-<script src="script.js"></script>
+.smallBtn:hover { border-color: var(--accent); color: var(--accent); }
 
-</body>
-</html>
+.yearChecks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13.5px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.yearChecks label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.plotBtn {
+  margin-top: 8px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: 3px;
+  padding: 11px 14px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.plotBtn:hover { background: #26594E; }
+
+.note {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  min-height: 1.4em;
+  margin: 0;
+}
+
+.note.error { color: #A4552E; }
+
+/* ---- Tabs ---- */
+
+.tabBar {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--line);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab:hover { color: var(--ink); }
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tabContent {
+  display: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.tabContent.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Stage ---- */
+
+.stage {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.plot {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  min-height: 0;
+}
+
+/* ---- Summary cards ---- */
+
+.summaryCards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding-top: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.summaryCards .empty {
+  grid-column: 1 / -1;
+  color: var(--ink-soft);
+  font-style: italic;
+  text-align: center;
+  padding: 40px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+
+.card.full {
+  grid-column: 1 / -1;
+}
+
+.card h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.card .metric {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.card .metric .label {
+  color: var(--ink-soft);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+}
+
+.card .metric .value {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.warnings {
+  position: relative;
+  margin-top: 10px;
+  padding: 10px 14px;
+  padding-right: 36px;
+  background: #FDF6EC;
+  border: 1px solid #E8D5A8;
+  border-radius: 3px;
+  font-size: 12.5px;
+  color: #7A5C1F;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.warnings p {
+  margin: 2px 0;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+
+.warnings__close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: #7A5C1F;
+  cursor: pointer;
+  padding: 2px 6px;
+}
+
+.warnings__close:hover {
+  color: #4A3810;
+}
+
+/* ---- Tables ---- */
+
+.tableWrap {
+  flex: 1;
+  overflow: auto;
+  padding-top: 12px;
+}
+
+.tableWrap table {
+  border-collapse: collapse;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.tableWrap th, .tableWrap td {
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.tableWrap th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 600;
+  color: var(--ink-soft);
+  font-size: 12px;
+  border-bottom: 2px solid var(--line);
+}
+
+.tableWrap tr:nth-child(even) td {
+  background: #FAFAF7;
+}
+
+@media (max-width: 800px) {
+  .frame { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; min-height: 100vh; }
+  .rail { border-right: none; border-bottom: 1px solid var(--line); height: auto; overflow-y: visible; max-height: 60vh; }
+  .stage { padding: 16px; height: auto; overflow: visible; }
+  .plot { min-height: 420px; }
+  .summaryCards { grid-template-columns: 1fr; }
+  .tabBar { flex-wrap: wrap; }
+}
