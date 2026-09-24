@@ -148,6 +148,7 @@
 
       syncEl.textContent = rawRows.length.toLocaleString() + " rows loaded.";
 
+      siteSelect.addEventListener("change", updateWellList);
       updateWellList();
     },
     error: function () {
