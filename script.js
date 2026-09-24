@@ -1,4 +1,3 @@
-// script.js
 (function () {
   "use strict";
 
@@ -84,6 +83,13 @@
     return a < b ? -1 : a > b ? 1 : 0;
   }
 
+  function findCol(headers, keyword) {
+    for (var i = 0; i < headers.length; i++) {
+      if (headers[i].toLowerCase().indexOf(keyword) !== -1) return headers[i];
+    }
+    return "";
+  }
+
   /* ---- tabs ---- */
   var tabs = document.querySelectorAll(".tab");
   for (var t = 0; t < tabs.length; t++) {
@@ -119,21 +125,8 @@
         return;
       }
 
-      // Set hidden site select (kept for future use)
-      var sites = unique(rawRows.map(function (r) { return (r[colMap.site] || "").trim(); }).filter(Boolean)).sort();
-      siteSelect.innerHTML = "";
-      for (var i = 0; i < sites.length; i++) {
-        var opt = document.createElement("option");
-        opt.value = sites[i];
-        opt.textContent = sites[i];
-        if (sites[i].toLowerCase() === default_site.toLowerCase()) opt.selected = true;
-        siteSelect.appendChild(opt);
-      }
-
-      // Set hidden cable length
       cableLenInput.value = default_cable;
 
-      // Years
       var allYears = unique(rawRows.map(function (r) {
         var d = r[colMap.date];
         if (!d) return null;
@@ -147,8 +140,6 @@
       populateYearSelect(endYearSel, allYears, allYears.length ? allYears[allYears.length - 1] : 2026);
 
       syncEl.textContent = rawRows.length.toLocaleString() + " rows loaded.";
-
-      siteSelect.addEventListener("change", updateWellList);
       updateWellList();
     },
     error: function () {
@@ -156,16 +147,9 @@
     }
   });
 
-  function findCol(headers, keyword) {
-    for (var i = 0; i < headers.length; i++) {
-      if (headers[i].toLowerCase().indexOf(keyword) !== -1) return headers[i];
-    }
-    return "";
-  }
-
   /* ---- well checkboxes ---- */
   function updateWellList() {
-    var site = siteSelect.value || default_site;
+    var site = default_site;
     var wells = unique(
       rawRows
         .filter(function (r) { return (r[colMap.site] || "").trim().toLowerCase() === site.toLowerCase(); })
@@ -173,21 +157,13 @@
         .filter(Boolean)
     ).sort(numericSort);
 
-    var isRivendell = site.toLowerCase() === "rivendell";
-
     wellChecksDiv.innerHTML = "";
     for (var i = 0; i < wells.length; i++) {
       var lbl = document.createElement("label");
       var cb = document.createElement("input");
       cb.type = "checkbox";
       cb.value = wells[i];
-
-      if (isRivendell) {
-        cb.checked = default_wells_rivendell.indexOf(wells[i]) !== -1;
-      } else {
-        cb.checked = true;
-      }
-
+      cb.checked = default_wells_rivendell.indexOf(wells[i]) !== -1;
       lbl.appendChild(cb);
       lbl.appendChild(document.createTextNode(" " + wells[i]));
       wellChecksDiv.appendChild(lbl);
@@ -211,7 +187,7 @@
     statusNote.textContent = "";
     statusNote.classList.remove("error");
 
-    var site = siteSelect.value || default_site;
+    var site = default_site;
     var cableLen = toNum(cableLenInput.value || default_cable);
     var sY = parseInt(startYearSel.value);
     var sM = parseInt(startMonthSel.value);
@@ -331,7 +307,7 @@
     renderWellTable(wellStats);
     renderDetailTable(details);
 
-    statusNote.textContent = details.length + " sessions analyzed across " + wellNames.length + " wells.";
+    statusNote.textContent = details.length + " sessions across " + wellNames.length + " wells.";
   }
 
   /* ---- renderers ---- */
@@ -339,24 +315,24 @@
   function renderSummary(o, warnings, site, cable, sY, sM, eY, eM) {
     var range = monthNames[sM - 1] + " " + sY + " \u2013 " + monthNames[eM - 1] + " " + eY;
 
-    var html = "";
-
-    html += '<div class="card full"><h3>Analysis</h3>';
-    html += met("Site", site);
-    html += met("Cable length", cable + " ft");
-    html += met("Date range", range);
-    html += met("Sessions", o.sessions);
+    var html = '<div class="card full"><h3>Summary</h3>';
+    html += '<div class="summaryGrid">';
+    html += summaryItem("Site", site);
+    html += summaryItem("Cable length", cable + " ft");
+    html += summaryItem("Date range", range);
+    html += summaryItem("Sessions", o.sessions);
     html += "</div>";
-
-    html += '<div class="card full"><h3>Standard Deviation</h3>';
-    html += met("Mean", o.meanSD.toFixed(2) + " counts");
-    html += met("Median", o.medianSD.toFixed(2) + " counts");
-    html += met("Min", o.minSD.toFixed(2) + " counts");
-    html += met("Max", o.maxSD.toFixed(2) + " counts");
+    html += '<div class="summaryDivider"></div>';
+    html += '<div class="summaryGrid">';
+    html += summaryItem("Mean SD", o.meanSD.toFixed(2));
+    html += summaryItem("Median SD", o.medianSD.toFixed(2));
+    html += summaryItem("Min SD", o.minSD.toFixed(2));
+    html += summaryItem("Max SD", o.maxSD.toFixed(2));
+    html += "</div>";
     html += "</div>";
 
     if (warnings.length > 0) {
-      html += '<div class="card full" id="warningCard"><h3>Warnings</h3>';
+      html += '<div class="card full" id="warningCard"><h3>Warnings (' + warnings.length + ')</h3>';
       html += '<div class="warnings" id="warningsBox">';
       html += '<button class="warnings__close" id="closeWarningsBtn" aria-label="Close">&times;</button>';
       for (var i = 0; i < warnings.length; i++) {
@@ -367,18 +343,19 @@
 
     summaryCards.innerHTML = html;
 
-    // Attach close button listener
     var closeBtn = document.getElementById("closeWarningsBtn");
     if (closeBtn) {
       closeBtn.addEventListener("click", function () {
-        var card = document.getElementById("warningCard");
-        if (card) card.style.display = "none";
+        document.getElementById("warningCard").style.display = "none";
       });
     }
   }
 
-  function met(label, value) {
-    return '<div class="metric"><span class="label">' + label + ':</span> <span class="value">' + value + "</span></div>";
+  function summaryItem(label, value) {
+    return '<div class="summaryItem">' +
+      '<span class="summaryLabel">' + label + '</span>' +
+      '<span class="summaryValue">' + value + '</span>' +
+      '</div>';
   }
 
   function renderSdBox(details, wellNames, site, cable) {
