@@ -363,6 +363,38 @@ select:focus, input:focus, .plotBtn:focus {
   background: #FAFAF7;
 }
 
+/* ---- Summary layout ---- */
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 0;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.summaryValue {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.summaryDivider {
+  border-top: 1px solid var(--line);
+  margin: 14px 0;
+}
+
 @media (max-width: 800px) {
   .frame { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; min-height: 100vh; }
   .rail { border-right: none; border-bottom: 1px solid var(--line); height: auto; overflow-y: visible; max-height: 60vh; }
